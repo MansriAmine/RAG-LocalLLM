@@ -38,7 +38,7 @@ def split_documents(documents: list[Document]):
     # Split the documents into smaller chunks for easier processing.
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=800,  # Max chunk size
-        chunk_overlap=80,  # Overlap between chunks
+        chunk_overlap=100,  # Overlap between chunks
         length_function=len,  # Use length of text to determine chunk size
         is_separator_regex=False,  # Do not use regex for separators
     )
