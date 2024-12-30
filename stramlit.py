@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
 import os
-
+import time
 # Streamlit UI
 st.title("LLM-Powered PDF Question Answering")
 
@@ -31,13 +31,20 @@ if uploaded_file:
         
         # Send POST request to FastAPI backend with streaming
         with st.spinner("Waiting for response..."):
-            response = requests.post(url, json=data, stream=True)
+            response = requests.post(url, json=data)
             
             if response.status_code == 200:
                 # Stream the response line by line
-                st.write("Answer:")
-                for chunk in response.iter_lines(decode_unicode=True):
-                    if chunk:  # Skip empty chunks
-                        st.write(chunk)
+                st.write("response :")
+                result = response.json()
+                #st.write(result["res"])
+                lines = result["res"].splitlines()
+                for line in lines:
+                    st.write(line)
+                    time.sleep(0.2)
+                # for chunk in result.iter_lines(decode_unicode=True):
+                #     if chunk:  # Skip empty chunks
+                #         st.write(chunk)
             else:
                 st.error(f"Failed to get an answer from the server. Status code: {response.status_code}")
+                 

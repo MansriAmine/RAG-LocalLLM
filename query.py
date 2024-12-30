@@ -42,11 +42,11 @@ def query_rag(query_text: str):
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
-    #print(prompt)
+    print(prompt)
 
     #new steam on 
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-    model = Ollama(model="mistral", callbacks=callback_manager)
+    model = Ollama(model="mistral")
     response_text = model.invoke(prompt)
     #print(response_text) #to print with no source 
 
@@ -54,6 +54,7 @@ def query_rag(query_text: str):
     formatted_response = f"Response: {response_text} \n Sources: {sources}"
     #print(formatted_response)
     return response_text
+    
 
 
 if __name__ == "__main__":
