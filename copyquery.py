@@ -3,11 +3,6 @@ from langchain.vectorstores.chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 from langchain_community.llms.ollama import Ollama
 from local_embedding_function import local_embedding_function
-from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
-from langchain.callbacks.manager import CallbackManager
-
-
-
 
 CHROMA_PATH = "chroma"
 
@@ -44,11 +39,9 @@ def query_rag(query_text: str):
     prompt = prompt_template.format(context=context_text, question=query_text)
     #print(prompt)
 
-    #new steam on 
-    callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-    model = Ollama(model="mistral", callbacks=callback_manager)
+    model = Ollama(model="mistral")
     response_text = model.invoke(prompt)
-    #print(response_text) #to print with no source 
+    print(response_text) #to print with no source 
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
     formatted_response = f"Response: {response_text} \n Sources: {sources}"
