@@ -3,3 +3,9 @@
 backup
 chroma
 trash
+__pycache__
+*.log
+*.db
+.env
+docker-compose.yml
+Dockerfile
