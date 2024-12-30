@@ -7,5 +7,3 @@ __pycache__
 *.log
 *.db
 .env
-docker-compose.yml
-Dockerfile
