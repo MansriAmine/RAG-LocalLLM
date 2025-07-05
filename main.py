@@ -22,6 +22,10 @@ def ask_question(request: QuestionRequest):
     
     if not os.path.exists(file_path):
         return {"error": "PDF file not found"}
+    else :
+        print("PDF file found")
+        # call createDB fucntion
+        
 
     # Get the user's question
     question = request.question
@@ -30,20 +34,9 @@ def ask_question(request: QuestionRequest):
     print(f"Received Question: {question}")
 
     # Run the query.py script and stream the output
-    #async def generate():
-    X= query_rag(question) 
-    print(X)
-    print(type(X))
+    answer = query_rag(question) 
+    #print(answer)
 
-    # try:
-    #     print(X)
-    #     print(type(X))
-    # except Exception as e:
-    #     yield f"Error: {str(e)} azerty"
-    
-    # Return the response as a stream
-    #return StreamingResponse(generate(), media_type="text/plain")
-    data = {"res":X}
+    data = {"res":answer}
     return data
-    #return {"answer": data}
 

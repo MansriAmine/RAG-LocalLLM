@@ -1,25 +1,27 @@
+import argparse
 import os
 import shutil
-from langchain.document_loaders.pdf import PyPDFLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
+from langchain.document_loaders.pdf import PyPDFDirectoryLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.schema.document import Document
 from local_embedding_function import local_embedding_function
 from langchain.vectorstores.chroma import Chroma
 
-def process_pdf_to_chroma(pdf_path, chroma_path="chroma"):
-    """
-    Process a PDF file, split its content into chunks, and add the chunks to a Chroma database.
+def process_documents(reset: bool = False):
+    CHROMA_PATH = "chroma"  # Directory to store Chroma database
+    DATA_PATH = "data"  # Directory where PDF files are stored
 
-    Args:
-        pdf_path (str): Path to the PDF file.
-        chroma_path (str): Path to the Chroma database directory. Defaults to "chroma".
-    """
-    def load_pdf(pdf_path):
-        # Load the PDF file as a document.
-        document_loader = PyPDFLoader(pdf_path)
+    def clear_database():
+        # Delete the Chroma database if it exists.
+        if os.path.exists(CHROMA_PATH):
+            shutil.rmtree(CHROMA_PATH)
+
+    def load_documents():
+        # Load PDF documents from the DATA_PATH directory.
+        document_loader = PyPDFDirectoryLoader(DATA_PATH)
         return document_loader.load()
 
-    def split_documents(documents):
+    def split_documents(documents: list[Document]):
         # Split the documents into smaller chunks for easier processing.
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=800,  # Max chunk size
@@ -35,8 +37,8 @@ def process_pdf_to_chroma(pdf_path, chroma_path="chroma"):
         current_chunk_index = 0
 
         for chunk in chunks:
-            source = chunk.metadata.get("source", "unknown")  # Get source (e.g., file name)
-            page = chunk.metadata.get("page", "unknown")  # Get page number
+            source = chunk.metadata.get("source")  # Get source (e.g., file name)
+            page = chunk.metadata.get("page")  # Get page number
             current_page_id = f"{source}:{page}"
 
             # Increment chunk index if page ID is the same as the last one.
@@ -54,10 +56,10 @@ def process_pdf_to_chroma(pdf_path, chroma_path="chroma"):
 
         return chunks
 
-    def add_to_chroma(chunks):
-        # Load the Chroma database, creating it if necessary.
+    def add_to_chroma(chunks: list[Document]):
+        # Load the existing Chroma database.
         db = Chroma(
-            persist_directory=chroma_path, embedding_function=local_embedding_function()
+            persist_directory=CHROMA_PATH, embedding_function=local_embedding_function()
         )
 
         # Calculate and add unique IDs to the document chunks.
@@ -69,13 +71,12 @@ def process_pdf_to_chroma(pdf_path, chroma_path="chroma"):
         print(f"Number of existing documents in DB: {len(existing_ids)}")
 
         # Filter out chunks that already exist in the database.
-        new_chunks = []
-        for chunk in chunks_with_ids:
-            if chunk.metadata["id"] not in existing_ids:
-                new_chunks.append(chunk)
+        new_chunks = [
+            chunk for chunk in chunks_with_ids if chunk.metadata["id"] not in existing_ids
+        ]
 
         # Add new chunks to the database if any.
-        if new_chunks:
+        if len(new_chunks):
             print(f"Adding new documents: {len(new_chunks)}")
             new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]  # Get new chunk IDs
             db.add_documents(new_chunks, ids=new_chunk_ids)  # Add new documents
@@ -83,15 +84,19 @@ def process_pdf_to_chroma(pdf_path, chroma_path="chroma"):
         else:
             print("No new documents to add")
 
-    # Ensure the Chroma database directory exists.
-    if not os.path.exists(chroma_path):
-        os.makedirs(chroma_path)
+    # Main logic starts here.
+    if reset:
+        print("Clearing Database")
+        clear_database()
 
-    # Load, split, and add the PDF to the Chroma database.
-    print(f"Processing PDF: {pdf_path}")
-    documents = load_pdf(pdf_path)
-    chunks = split_documents(documents)
-    add_to_chroma(chunks)
+    # Load, split, and add documents to the Chroma database.
+    documents = load_documents()  # Load documents from the data directory
+    chunks = split_documents(documents)  # Split documents into smaller chunks
+    add_to_chroma(chunks)  # Add chunks to Chroma database
 
-# Example usage:
-# process_pdf_to_chroma(file_path)
+# Execute the function if this script is run directly.
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--reset", action="store_true", help="Reset the database.")
+    args = parser.parse_args()
+    process_documents(reset=args.reset)

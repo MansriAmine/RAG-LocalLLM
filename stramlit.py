@@ -37,14 +37,10 @@ if uploaded_file:
                 # Stream the response line by line
                 st.write("response :")
                 result = response.json()
-                #st.write(result["res"])
                 lines = result["res"].splitlines()
                 for line in lines:
                     st.write(line)
                     time.sleep(0.2)
-                # for chunk in result.iter_lines(decode_unicode=True):
-                #     if chunk:  # Skip empty chunks
-                #         st.write(chunk)
             else:
                 st.error(f"Failed to get an answer from the server. Status code: {response.status_code}")
                  

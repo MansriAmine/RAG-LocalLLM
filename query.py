@@ -18,7 +18,7 @@ Answer the question based only on the following context:
 
 ---
 
-Answer the question based on the above context: {question}
+Answer the question based on the above context and i want the answer to be in bullet points , also check the answer twice before sending it to avoid mistakes or hallucination : {question}
 """
 
 
@@ -37,7 +37,7 @@ def query_rag(query_text: str):
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Search the DB.
-    results = db.similarity_search_with_score(query_text, k=5)
+    results = db.similarity_search_with_score(query_text, k=3)
 
     context_text = "\n\n---\n\n".join([doc.page_content for doc, _score in results])
     prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
@@ -46,9 +46,10 @@ def query_rag(query_text: str):
 
     #new steam on 
     callback_manager = CallbackManager([StreamingStdOutCallbackHandler()])
-    model = Ollama(model="mistral")
+    model = Ollama(model="deepseek-r1:14b")        
+        
     response_text = model.invoke(prompt)
-    #print(response_text) #to print with no source 
+    print(response_text) #to print with no source 
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
     formatted_response = f"Response: {response_text} \n Sources: {sources}"
